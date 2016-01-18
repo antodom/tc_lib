@@ -16,9 +16,9 @@ In tc_lib current version you can use two kind of objects, capture and action ob
 
 ### 2. Capture objects
 
-Capture objects allow to measures period and pulses (the duty) of digital signals, like PWM signals. This is carried out in parallel using the resources on TC's channels.
+Capture objects allow measuring period and pulses (the duty) of digital signals, like PWM signals. This is carried out in parallel using the resources on TC's channels.
 
-Concretely, it is possible to use up to nine capture objects each one corresponding to the nine channels available, namely, TC0, TC1, TC2 (on TC module 0), TC3, TC4, TC5 (on TC module 1), and TC6, TC7 and TC8 (on TC module 2). For using any of them you have to previously declare them in advance using a specific declaration syntax provided by the libraryusing macros *capture_tc0_declaration*, *capture_tc1_declaration*, etc. A snippet of code extracted from the example *capture_test.ino* declaring a capture object corresponding to TC0 is shown next:
+Concretely, it is possible to use up to nine capture objects each one corresponding to the nine channels available, namely, TC0, TC1, TC2 (on TC module 0), TC3, TC4, TC5 (on TC module 1), and TC6, TC7 and TC8 (on TC module 2). For using any of them you have to previously declare them in advance using a specific declaration syntax provided by the library through macros *capture_tc0_declaration*, *capture_tc1_declaration*, etc. A snippet of code extracted from the example *capture_test.ino* declaring a capture object corresponding to TC0 is shown next:
 
 ```
 // capture_tc0 declaration
@@ -26,7 +26,7 @@ Concretely, it is possible to use up to nine capture objects each one correspond
 // PB25, which is pin 2 for Arduino DUE, so  the capture pin in  this example
 // is pin 2. For the correspondence between all TIOA inputs for the different 
 // TC modules, you should consult uC Atmel ATSAM3X8E datasheet in section "36. 
-// Timer Counter (TC)"), and the Arduino pin mapping for the DUE.
+// Timer Counter (TC)", and the Arduino pin mapping for the DUE.
 
 capture_tc0_declaration();
 ```
@@ -110,7 +110,7 @@ For compiling on command line using CMake, just proceed in the following manner:
 
 ### 8. Library users
 
-In this section we would like to enumerate users using the library in their own projects and developments. So please, if your are using the library, drop us an email indicating in what project or development you are using it.
+In this section we would like to enumerate users using the library in their own projects and developments. So please, if you are using the library, drop us an email indicating in what project or development you are using it.
 
 The list of users/projects goes now:
 
