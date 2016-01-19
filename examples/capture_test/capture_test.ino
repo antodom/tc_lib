@@ -36,7 +36,7 @@
 
 using namespace arduino_due;
 
-#define CAPTURE_TIME_WINDOW 2500000 // usecs
+#define CAPTURE_TIME_WINDOW 5000000 // usecs
 #define ANALOG_PIN 7
 #define ANALOG_VALUE 127 // values in the interval [0,255] 
 
@@ -76,9 +76,15 @@ void loop() {
 
   Serial.println("********************************************************");  
   Serial.print("--> duty: "); 
-  Serial.print(duty/capture_tc0.ticks_per_usec());
+  Serial.print(
+    static_cast<double>(duty)/static_cast<double>(capture_tc0.ticks_per_usec()),
+    3
+  );
   Serial.print(" usecs. period: ");
-  Serial.print(period/capture_tc0.ticks_per_usec());
+  Serial.print(
+    static_cast<double>(period)/static_cast<double>(capture_tc0.ticks_per_usec()),
+    3
+  );
   Serial.println(" usecs.");
 }
 

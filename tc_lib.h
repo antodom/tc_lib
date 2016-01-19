@@ -125,7 +125,9 @@ namespace arduino_due
 	~capture() {}
 
         capture(const capture&) = delete;
+	capture(capture&&) = delete;
 	capture& operator=(const capture&) = delete;
+	capture& operator=(capture&&) = delete;
 
 	static void tc_interrupt(uint32_t the_status)
 	{ _ctx_.tc_interrupt(the_status); }
@@ -283,7 +285,9 @@ namespace arduino_due
 	~action() {}
 
         action(const action&) = delete;
+        action(action&&) = delete;
 	action& operator=(const action&) = delete;
+	action& operator=(action&&) = delete;
 
 	bool start(
 	  uint32_t the_period, 
