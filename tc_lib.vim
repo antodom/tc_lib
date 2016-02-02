@@ -9,6 +9,7 @@ unlet s:cpo_save
 set autoindent
 set autowrite
 set backspace=indent,eol,start
+set cindent
 set fileencodings=ucs-bom,utf-8,default,latin1
 set helplang=es
 set history=50
@@ -31,13 +32,13 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 set shortmess=aoO
-badd +3 arduino_due_toolchain.cmake
-badd +0 CMakeLists.txt
-badd +0 library.properties
-badd +0 README.md
-badd +0 tc_defs.h
-badd +0 tc_lib.h
-badd +0 tc_lib_license_header.txt
+badd +1 arduino_due_toolchain.cmake
+badd +1 CMakeLists.txt
+badd +7 library.properties
+badd +1 README.md
+badd +1 tc_defs.h
+badd +1 tc_lib.h
+badd +1 tc_lib_license_header.txt
 args arduino_due_toolchain.cmake CMakeLists.txt library.properties README.md tc_defs.h tc_lib.h CMakeLists.txt tc_lib_license_header.txt
 edit README.md
 set splitbelow splitright
@@ -155,7 +156,7 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 47 - ((3 * winheight(0) + 8) / 16)
+let s:l = 47 - ((5 * winheight(0) + 17) / 35)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -163,7 +164,7 @@ normal! zt
 normal! 0
 wincmd w
 argglobal
-edit library.properties
+edit tc_lib.h
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
@@ -172,7 +173,7 @@ setlocal nobinary
 setlocal bufhidden=
 setlocal buflisted
 setlocal buftype=
-setlocal nocindent
+setlocal cindent
 setlocal cinkeys=0{,0},0),:,0#,!^F,o,O,e
 setlocal cinoptions=
 setlocal cinwords=if,else,while,do,for,switch
@@ -194,8 +195,8 @@ setlocal nodiff
 setlocal equalprg=
 setlocal errorformat=
 setlocal noexpandtab
-if &filetype != 'jproperties'
-setlocal filetype=jproperties
+if &filetype != 'cpp'
+setlocal filetype=cpp
 endif
 setlocal foldcolumn=0
 setlocal foldenable
@@ -253,8 +254,8 @@ setlocal statusline=
 setlocal suffixesadd=
 setlocal swapfile
 setlocal synmaxcol=3000
-if &syntax != 'jproperties'
-setlocal syntax=jproperties
+if &syntax != 'cpp'
+setlocal syntax=cpp
 endif
 setlocal tabstop=8
 setlocal tags=
@@ -266,12 +267,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 9 - ((3 * winheight(0) + 8) / 16)
+let s:l = 202 - ((34 * winheight(0) + 17) / 35)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-9
-normal! 037|
+202
+normal! 021|
 wincmd w
 2wincmd w
 exe 'vert 1resize ' . ((&columns * 75 + 75) / 151)

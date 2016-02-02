@@ -159,8 +159,8 @@ namespace arduino_due
 	bool is_overrun(uint32_t the_status) 
 	{ return _ctx_.is_overrun(the_status); }
 
-	// NOTE: when too much loading overrun have been detected
-	// the capture stops measuring to avoid the used of compu-
+	// NOTE: when too much loading overruns have been detected
+	// the capture stops measuring to avoid the use of compu-
 	// tational resources. Take into account that if the sig-
 	// nal measured has a frequency around 1 Mhz or higher the
 	// interrupts due to the capture object will consume all
