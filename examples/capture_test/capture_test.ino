@@ -47,20 +47,21 @@ using namespace arduino_due;
 // TC modules, you should consult uC Atmel ATSAM3X8E datasheet in section "36. 
 // Timer Counter (TC)"), and the Arduino pin mapping for the DUE.
 capture_tc0_declaration();
+auto& capture_pin2=capture_tc0;
 
 void setup() {
   // put your setup code here, to run once:
 
   Serial.begin(9600);
 
-  // capture_tc0 initialization
-  capture_tc0.config(CAPTURE_TIME_WINDOW);
+  // capture_pin2 initialization
+  capture_pin2.config(CAPTURE_TIME_WINDOW);
 
   Serial.println("========================================================");
 
-  Serial.print("ticks per usec: "); Serial.println(capture_tc0.ticks_per_usec());
+  Serial.print("ticks per usec: "); Serial.println(capture_pin2.ticks_per_usec());
   Serial.print("max capture window: "); 
-  Serial.print(capture_tc0.max_capture_window());
+  Serial.print(capture_pin2.max_capture_window());
   Serial.println(" usecs.");
 
   Serial.println("========================================================");
@@ -71,14 +72,23 @@ void setup() {
 void loop() {
   // put your main code here,to run repeatedly:
 
-  uint32_t duty,period;
-  capture_tc0.get_duty_and_period(duty,period);
+  uint32_t status,duty,period;
+  status=capture_pin2.get_duty_and_period(duty,period);
 
   Serial.println("********************************************************");  
-  Serial.print("--> duty: "); 
-  Serial.print(duty/capture_tc0.ticks_per_usec());
+  Serial.print("--> [PIN "); Serial.print(ANALOG_PIN);
+  Serial.print(" -> PIN 2] duty: "); 
+  Serial.print(
+    static_cast<double>(duty)/
+    static_cast<double>(capture_pin2.ticks_per_usec()),
+    3
+  );
   Serial.print(" usecs. period: ");
-  Serial.print(period/capture_tc0.ticks_per_usec());
+  Serial.print(
+    static_cast<double>(period)/
+    static_cast<double>(capture_pin2.ticks_per_usec()),
+    3
+  );
   Serial.println(" usecs.");
 }
 

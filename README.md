@@ -1,4 +1,4 @@
-## tc_lib v1.0
+## tc_lib v1.1
 
 This is tc_lib library for the Arduino DUE electronic prototyping platform. 
 
@@ -42,6 +42,31 @@ As soon as the object is configured the corresponding TC channel starts capturin
 
 Capture objects take advantage of TC module channels in *capture* mode to measure digital pulses. Concretely, using tc_lib capture objects we can obtain the last pulse duration (duty) and the last period of the measured signal. Example *capture_test.ino* use a PWM signal generated on analog pin 7 as the signal to measure. When nothing is measured the duty and the period measured by the capture object are zero. Take into account that the measured duty and period get stored inside the capture objects at the interrupt handlers associated with the TC channels involved.
 
+### 2.1 Fast signals and capture objects
+
+When capturing signals capture objects do intensive use of interrupts associated to the TC channel associated with the specific object. If the signal to capture is very fast (pulse duration around 1 microsecond or less), some interrupts will be missed to track the signal. Internally the TC channel in capture mode registers those situations with the signaling of a "load overrun" of one of the capture registers RA or RB (more details in ATSAM3X8E data sheet). Evidently, this may also happen in an application where the use of interrupts is very high, even if the signal to capture is not so fast. In any case, specially with fast signals (frequencies of around 1 Mhz) this massive use of interrupts could provoke the freezing of the CPU, since all CPU time was invested on interrupts. To avoid that situation, the capture object stops capturing when it detects too much overrun events, keeping internally the duty and period of the last pulse captured. Function *get_duty_and_period()* returns a status value where we can check if the capture objects was overrun and/or stopped. Here a snippet of code from example *pwm_capture_test.ino* illustrating its use:
+
+```
+status=capture_pin2.get_duty_and_period(duty,period); <====
+Serial.print("duty: "); 
+Serial.print(
+  static_cast<double>(duty)/
+  static_cast<double>(capture_pin2.ticks_per_usec()),
+  3
+);
+Serial.print(" usecs. period: ");
+Serial.print(
+  static_cast<double>(period)/
+  static_cast<double>(capture_pin2.ticks_per_usec()),
+  3
+);
+Serial.print(" usecs. ");
+if(capture_pin2.is_overrun(status)) Serial.print("[overrun]"); <====
+if(capture_pin2.is_stopped(status)) Serial.print("[stopped]"); <==== 
+Serial.println();   
+```
+Once a capture object is stopped due to the occurrence of too many load overrun situations, the object is restarted when calling member function *get_duty_and_period()* or member function *restart()*.
+
 ### 3. Action objects
 
 The action objects available in tc_lib allow us to have a callback called periodically in our program.
@@ -81,7 +106,11 @@ In addition you must add the flag -std=gnu++11 for compiling. For doing that add
 
 ### 5. Examples
 
-On the examples directory you have available a basic example for using a capture object, *capture_test.ino*, and an example for using an action object, *action_test.ino*. We hope both examples are self-explaining.
+On the examples directory you have available a basic example for using a capture object, *capture_test.ino*, and an example for using an action object, *action_test.ino*. 
+
+There is third example, *pwm_capture_test.ino* which is specifically designed to check the capture objects with fast signals. For this example it is necessary the use of library pwm_lib, available at [https://github.com/antodom/pwm_lib](https://github.com/antodom/pwm_lib).
+
+I hope all three xamples are self-explaining.
 
 ### 6. Incompatibilities
 

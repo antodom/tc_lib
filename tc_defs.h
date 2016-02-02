@@ -1,6 +1,6 @@
 /**
  ** tc_lib library
- ** Copyright (C) 2016
+ ** Copyright (C) 2015,2016
  **
  **   Antonio C. Domínguez Brito <adominguez@iusiani.ulpgc.es>
  **     División de Robótica y Oceanografía Computacional <www.roc.siani.es>
@@ -98,6 +98,26 @@ namespace arduino_due
       static void config_interrupt() { NVIC_SetPriority(info::irq,0); }
       static void enable_interrupts() { NVIC_EnableIRQ(info::irq); }
       static void disable_interrupts() { NVIC_DisableIRQ(info::irq); }
+
+      static void enable_lovr_interrupt()
+      {
+	info::tc_p->TC_CHANNEL[info::channel].TC_IER=
+	  TC_IER_LOVRS;
+      }
+      
+      static bool is_enabled_lovr_interrupt()
+      {
+	return (
+	  info::tc_p->TC_CHANNEL[info::channel].TC_IMR &
+	  TC_IMR_LOVRS
+	);
+      }
+      
+      static void disable_lovr_interrupt()
+      {
+	info::tc_p->TC_CHANNEL[info::channel].TC_IDR=
+	  TC_IDR_LOVRS;
+      }
 
       static void enable_ldra_interrupt()
       {

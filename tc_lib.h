@@ -1,6 +1,6 @@
 /**
  ** tc_lib library
- ** Copyright (C) 2016
+ ** Copyright (C) 2015,2016
  **
  **   Antonio C. Domínguez Brito <adominguez@iusiani.ulpgc.es>
  **     División de Robótica y Oceanografía Computacional <www.roc.siani.es>
@@ -120,6 +120,8 @@ namespace arduino_due
     {
       public:
 
+	static constexpr const uint32_t DEFAULT_MAX_OVERRUNS=100;
+
 	capture() {}
 
 	~capture() {}
@@ -134,19 +136,55 @@ namespace arduino_due
 	// the time window for measuring the duty of a PWM signal. As
 	// a rule of thumb if the PWM signal you want to measure has
 	// a period T, the capture window should be at least twice this
-	// time, that is, 2T.	
-	bool config(uint32_t the_capture_window) { _ctx_.config(the_capture_window); }
+	// time, that is, 2T. Parameter the_overruns specify how many
+	// loading overruns are tolerated before ceasing capturing.
+	bool config(
+	  uint32_t the_capture_window,
+	  uint32_t the_overruns = DEFAULT_MAX_OVERRUNS
+	) { _ctx_.config(the_capture_window,the_overruns); }
 
 	constexpr uint32_t ticks_per_usec() { return _ctx_.ticks_per_usec(); }
 	constexpr uint32_t max_capture_window() { return _ctx_.max_capture_window(); }
 
-	uint32_t get_duty() { return _ctx_.duty; }
-
-	void get_duty_and_period(uint32_t& the_duty, uint32_t& the_period) 
+	// NOTE: member function get_duty_and_period() returns 
+	// the status of the capture object. Returns in arguments 
+	// the last valid measured duty and period. 
+	uint32_t get_duty_and_period(uint32_t& the_duty, uint32_t& the_period) 
 	{ return _ctx_.get_duty_and_period(the_duty,the_period); }
 
 	uint32_t get_capture_window() { return _ctx_.capture_window; }
 
+	bool is_overrun(uint32_t the_status) 
+	{ return _ctx_.is_overrun(the_status); }
+
+	// NOTE: when too much loading overrun have been detected
+	// the capture stops measuring to avoid the used of compu-
+	// tational resources. Take into account that if the sig-
+	// nal measured has a frequency around 1 Mhz or higher the
+	// interrupts due to the capture object will consume all
+	// CPU time. If this is the case, the capture object stops
+	// capturing when the overun threshold is surpassed.
+	bool is_stopped(uint32_t the_status) 
+	{ return _ctx_.is_stopped(the_status); }
+
+	// NOTE:capture object is unset when not configured
+	bool is_unset(uint32_t the_status) 
+	{ return _ctx_.is_unset(the_status); }
+
+	void stop() { _ctx_.stop(); }
+	void restart() { _ctx_.restart(); }
+
+	void lock() 
+	{ 
+	  if( is_unset() || is_stopped() ) return; 
+	  timer::disable_interrupts(); 
+	}
+
+	void unlock() 
+	{ 
+	  if( is_unset() || is_stopped() ) return; 
+	  timer::enable_interrupts(); 
+	}
 
       private:
 
@@ -154,10 +192,17 @@ namespace arduino_due
 
         struct _capture_ctx_
 	{
-
+	  enum status_codes: uint32_t
+	  {
+	    UNSET=0,
+	    SET=1,
+	    OVERRUN=2,
+	    STOPPED=4
+	  };
+	  
 	  _capture_ctx_() {}
 
-	  bool config(uint32_t the_capture_window);
+	  bool config(uint32_t the_capture_window, uint32_t the_overruns);
 
 	  void tc_interrupt(uint32_t the_status);
 
@@ -176,30 +221,111 @@ namespace arduino_due
 	      ticks_per_usec();
 	  }
 
-	  void get_duty_and_period(uint32_t& the_duty, uint32_t& the_period)
+	  uint32_t get_duty_and_period(uint32_t& the_duty, uint32_t& the_period)
 	  {
+	    uint32_t the_status=status;
+	    if(is_unset(the_status)) return the_status;
+
 	    timer::disable_interrupts(); 
 	    the_duty=duty; the_period=period;
+	    the_status=status; 
+	    status=status&(~status_codes::OVERRUN);
 	    timer::enable_interrupts();
+
+	    if(is_stopped(the_status)) restart();
+
+	    return the_status; 
 	  }
 
+	  bool is_overrun(uint32_t the_status) 
+	  { return (the_status&status_codes::OVERRUN); }
+
+	  bool is_stopped(uint32_t the_status) 
+	  { return (the_status&status_codes::STOPPED); }
+
+	  bool is_unset(uint32_t the_status) 
+	  { return !the_status; }
+
+	  void stop() 
+	  { 
+	    uint32_t the_status=status;
+	    if(
+	      is_unset(the_status) ||
+	      is_stopped(the_status)
+	    ) return;
+
+	    timer::stop_interrupts(); 
+	    status=status|status_codes::STOPPED; 
+	  }
+
+	  void restart() 
+	  {
+	    uint32_t the_status=status;
+	    if(
+	      is_unset(the_status) ||
+	      !is_stopped(the_status)
+	    ) return;
+
+	    ra=duty=period=overruns=0;
+	    status&=
+	      ~(status_codes::OVERRUN|status_codes::STOPPED);
+
+	    // clearing pending interrupt flags
+	    uint32_t dummy=TC_GetStatus( 
+	      timer::info::tc_p,
+	      timer::info::channel
+	    );
+	    timer::start_interrupts();
+	  }
+	  
 	  void end()
 	  {
+	    uint32_t the_status=status;
+	    if(is_unset(the_status)) return;
+
+	    timer::stop_interrupts();
+	    timer::disable_lovr_interrupt();
 	    timer::disable_ldra_interrupt();
 	    timer::disable_ldrb_interrupt();
 	    timer::disable_rc_interrupt();
-
-	    timer::stop_interrupts();
 	    pmc_disable_periph_clk(uint32_t(timer::info::irq));
+
+	    status=status_codes::UNSET;
 	  }
+
+	  void load_overrun()
+	  {
+	    status=status|status_codes::OVERRUN;
+	    if((++overruns)>max_overruns)
+	    { 
+	      timer::stop_interrupts(); 
+	      status=status|status_codes::STOPPED;
+	    }
+	  }
+
+	  void ra_loaded()
+	  {
+	    ra=timer::info::tc_p->TC_CHANNEL[timer::info::channel].TC_RA; 
+	  }
+
+	  void rb_loaded()
+	  {
+	    period=timer::info::tc_p->TC_CHANNEL[timer::info::channel].TC_RB;
+	    duty=period-ra; 
+	  }
+
+	  void rc_matched() { ra=duty=period=0; }
 	  	  
 	  // capture values
 	  volatile uint32_t ra;
 	  volatile uint32_t duty;
 	  volatile uint32_t period;
+	  volatile uint32_t overruns;
+	  volatile uint32_t status;
 	  
 	  uint32_t rc;
 	  uint32_t capture_window;
+	  uint32_t max_overruns;
 	};
 
 	static _capture_ctx_ _ctx_;
@@ -210,14 +336,17 @@ namespace arduino_due
 
     template<timer_ids TIMER>
     bool capture<TIMER>::_capture_ctx_::config(
-      uint32_t the_capture_window // in microseconds
+      uint32_t the_capture_window, // in microseconds
+      uint32_t the_overruns
     )
     {
-      if(the_capture_window>max_capture_window())
+      if( (the_capture_window>max_capture_window()) || !the_overruns) 
 	return false;
 
       capture_window=the_capture_window;
-      ra=duty=period=0;
+      ra=duty=period=overruns=0;
+      max_overruns=the_overruns;
+      status=status_codes::SET;
 
       // capture window in ticks
       rc=capture_window*ticks_per_usec();
@@ -241,6 +370,7 @@ namespace arduino_due
       // seting RC to the capture window 
       TC_SetRC(timer::info::tc_p,timer::info::channel,rc);
 
+      timer::enable_lovr_interrupt();
       timer::enable_ldra_interrupt();
       timer::enable_ldrb_interrupt();
       timer::enable_rc_interrupt();
@@ -256,20 +386,25 @@ namespace arduino_due
       uint32_t the_status
     )
     {
-      // capture interrupt, RA loaded
-      if((the_status & TC_SR_LDRAS) && timer::is_enabled_ldra_interrupt())
-      { ra=timer::info::tc_p->TC_CHANNEL[timer::info::channel].TC_RA; }
-      
-      // capture interrupt, RB loaded
-      if((the_status & TC_SR_LDRBS) && timer::is_enabled_ldrb_interrupt())
-      {
-	period=timer::info::tc_p->TC_CHANNEL[timer::info::channel].TC_RB;
-	duty=period-ra; ra=0;
-      }
+      if( // load overrun on RA or RB
+	(the_status && TC_SR_LOVRS) && 
+	timer::is_enabled_lovr_interrupt()
+      ) load_overrun();
 
-      // RC compare interrupt
-      if((the_status & TC_SR_CPCS) && timer::is_enabled_rc_interrupt())
-      { ra=duty=period=0; }
+      if( // RA loaded?
+	(the_status & TC_SR_LDRAS) && 
+	timer::is_enabled_ldra_interrupt()
+      ) ra_loaded();
+
+      if( // RB loaded?
+	(the_status & TC_SR_LDRBS) && 
+	timer::is_enabled_ldrb_interrupt()
+      ) rb_loaded();
+
+      if( // RC compare interrupt?
+	(the_status & TC_SR_CPCS) && 
+	timer::is_enabled_rc_interrupt()
+      ) rc_matched(); 
     }
 
     template<timer_ids TIMER>
@@ -294,8 +429,8 @@ namespace arduino_due
 
 	void stop() { _ctx_.stop(); } 
 
-	void lock() { _ctx_.disable_tc_interrupts(); }
-	void unlock() { _ctx_.enable_tc_interrupts(); }
+	void lock() { timer::disable_tc_interrupts(); }
+	void unlock() { timer::enable_tc_interrupts(); }
 
 	constexpr uint32_t max_period() { return _ctx_.max_period(); }
 
