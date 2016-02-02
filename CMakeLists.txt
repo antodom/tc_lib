@@ -40,7 +40,7 @@ else()
 
 endif()
 
-# building Arduino Standard Library
+# building pwm_lib 
 build_library(
   pwm_lib 
   SRC_PATHS 
