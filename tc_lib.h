@@ -150,9 +150,29 @@ namespace arduino_due
 
 	// NOTE: member function get_duty_and_period() returns 
 	// the status of the capture object. Returns in arguments 
-	// the last valid measured duty and period. 
-	uint32_t get_duty_and_period(uint32_t& the_duty, uint32_t& the_period) 
+	// the last valid measured and period. 
+	uint32_t get_duty_and_period(
+	  uint32_t& the_duty, 
+	  uint32_t& the_period
+	) 
 	{ return _ctx_.get_duty_and_period(the_duty,the_period); }
+
+	// NOTE: member function get_duty_and_period() returns 
+	// the status of the capture object. Returns in arguments 
+	// the last valid measured and period, and the count of 
+	// pulses accumulated since the last config. 
+	uint32_t get_duty_period_and_pulses(
+	  uint32_t& the_duty, 
+	  uint32_t& the_period,
+	  uint32_t& the_pulses
+	) 
+	{ 
+	  return _ctx_.get_duty_period_and_pulses(
+	    the_duty,
+	    the_period,
+	    the_pulses
+	  ); 
+	}
 
 	uint32_t get_capture_window() { return _ctx_.capture_window; }
 
@@ -223,13 +243,36 @@ namespace arduino_due
 	      ticks_per_usec();
 	  }
 
-	  uint32_t get_duty_and_period(uint32_t& the_duty, uint32_t& the_period)
+	  uint32_t get_duty_and_period(
+	    uint32_t& the_duty, 
+	    uint32_t& the_period
+	  )
 	  {
 	    uint32_t the_status=status;
 	    if(is_unset(the_status)) return the_status;
 
 	    timer::disable_interrupts(); 
 	    the_duty=duty; the_period=period;
+	    the_status=status; 
+	    status=status&(~status_codes::OVERRUN);
+	    timer::enable_interrupts();
+
+	    if(is_stopped(the_status)) restart();
+
+	    return the_status; 
+	  }
+
+	  uint32_t get_duty_period_and_pulses(
+	    uint32_t& the_duty, 
+	    uint32_t& the_period,
+	    uint32_t& the_pulses
+	  )
+	  {
+	    uint32_t the_status=status;
+	    if(is_unset(the_status)) return the_status;
+
+	    timer::disable_interrupts(); 
+	    the_duty=duty; the_period=period; the_pulses=pulses;
 	    the_status=status; 
 	    status=status&(~status_codes::OVERRUN);
 	    timer::enable_interrupts();
@@ -313,7 +356,7 @@ namespace arduino_due
 	  void rb_loaded()
 	  {
 	    period=timer::info::tc_p->TC_CHANNEL[timer::info::channel].TC_RB;
-	    duty=period-ra; 
+	    duty=period-ra; pulses++;
 	  }
 
 	  void rc_matched() { ra=duty=period=0; }
@@ -322,6 +365,7 @@ namespace arduino_due
 	  volatile uint32_t ra;
 	  volatile uint32_t duty;
 	  volatile uint32_t period;
+	  volatile uint32_t pulses;
 	  volatile uint32_t overruns;
 	  volatile uint32_t status;
 	  
@@ -346,7 +390,7 @@ namespace arduino_due
 	return false;
 
       capture_window=the_capture_window;
-      ra=duty=period=overruns=0;
+      ra=duty=period=pulses=overruns=0;
       max_overruns=the_overruns;
       status=status_codes::SET;
 
