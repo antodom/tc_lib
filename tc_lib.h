@@ -433,7 +433,7 @@ namespace arduino_due
     )
     {
       if( // load overrun on RA or RB
-	(the_status && TC_SR_LOVRS) && 
+	(the_status & TC_SR_LOVRS) && 
 	timer::is_enabled_lovr_interrupt()
       ) load_overrun();
 
