@@ -114,7 +114,7 @@ On the examples directory you have available a basic example for using a capture
 
 There is third example, *pwm_capture_test.ino* which is specifically designed to check the capture objects with fast signals. For this example it is necessary the use of library pwm_lib, available at [https://github.com/antodom/pwm_lib](https://github.com/antodom/pwm_lib).
 
-I hope all three xamples are self-explaining.
+I hope all three examples are self-explaining.
 
 ### 6. Incompatibilities
 
