@@ -239,8 +239,9 @@ namespace arduino_due
 	  static constexpr uint32_t max_capture_window()
 	  {
 	    return 
-	      static_cast<uint32_t>(static_cast<long long>(1<<32)-1) /
-	      ticks_per_usec();
+	      static_cast<uint32_t>(
+          static_cast<long long>(1<<32)-static_cast<long long>(1)
+        ) / ticks_per_usec();
 	  }
 
 	  uint32_t get_duty_and_period(
@@ -407,10 +408,10 @@ namespace arduino_due
         timer::info::channel,
         TC_CMR_TCCLKS_TIMER_CLOCK1 | // clock prescaler set to /2
         TC_CMR_CPCTRG | // timer reset on RC match
-	TC_CMR_LDRA_RISING | // capture to RA on rising edge
-	TC_CMR_LDRB_FALLING | // capture to RB on falling edge
-	TC_CMR_ETRGEDG_FALLING | // external trigger on falling edge
-	TC_CMR_ABETRG // external trigger on TIOA
+        TC_CMR_LDRA_RISING | // capture to RA on rising edge
+        TC_CMR_LDRB_FALLING | // capture to RB on falling edge
+        TC_CMR_ETRGEDG_FALLING | // external trigger on falling edge
+        TC_CMR_ABETRG // external trigger on TIOA
       );
       
       // seting RC to the capture window 
@@ -433,23 +434,23 @@ namespace arduino_due
     )
     {
       if( // load overrun on RA or RB
-	(the_status & TC_SR_LOVRS) && 
-	timer::is_enabled_lovr_interrupt()
+        (the_status & TC_SR_LOVRS) && 
+        timer::is_enabled_lovr_interrupt()
       ) load_overrun();
 
       if( // RA loaded?
-	(the_status & TC_SR_LDRAS) && 
-	timer::is_enabled_ldra_interrupt()
+        (the_status & TC_SR_LDRAS) && 
+        timer::is_enabled_ldra_interrupt()
       ) ra_loaded();
 
       if( // RB loaded?
-	(the_status & TC_SR_LDRBS) && 
-	timer::is_enabled_ldrb_interrupt()
+        (the_status & TC_SR_LDRBS) && 
+        timer::is_enabled_ldrb_interrupt()
       ) rb_loaded();
 
       if( // RC compare interrupt?
-	(the_status & TC_SR_CPCS) && 
-	timer::is_enabled_rc_interrupt()
+        (the_status & TC_SR_CPCS) && 
+        timer::is_enabled_rc_interrupt()
       ) rc_matched(); 
     }
 
@@ -461,93 +462,112 @@ namespace arduino_due
 
         action() {}
 
-	~action() {}
+        ~action() {}
 
         action(const action&) = delete;
         action(action&&) = delete;
-	action& operator=(const action&) = delete;
-	action& operator=(action&&) = delete;
+        action& operator=(const action&) = delete;
+        action& operator=(action&&) = delete;
 
-	bool start(
-	  uint32_t the_period, 
-	  callback_t the_callback, 
-	  void* the_user_ctx
-	)
-	{ return _ctx_.start(the_period,the_callback,the_user_ctx); }
+        bool start(
+          uint32_t the_period, // hundreths of usecs. (1e-8 secs.)
+          callback_t the_callback, 
+          void* the_user_ctx
+        )
+        { return _ctx_.start(the_period,the_callback,the_user_ctx); }
 
-	void stop() { _ctx_.stop(); } 
+        void stop() { _ctx_.stop(); } 
 
-	void lock() { timer::disable_tc_interrupts(); }
-	void unlock() { timer::enable_tc_interrupts(); }
+        void lock() { timer::disable_tc_interrupts(); }
+        void unlock() { timer::enable_tc_interrupts(); }
 
-	constexpr uint32_t max_period() { return _ctx_.max_period(); }
+        constexpr uint32_t max_period() // hundreths of usecs. 
+        { return _ctx_.max_period(); }
 
-	// NOTE: get_period() returns 0 if the action is stopped
-	uint32_t get_period() { return _ctx_.period; }
+        // NOTE: get_period() returns 0 if the action is stopped
+        uint32_t get_period() // hundreths of usecs. (1e-8 secs.)
+        { return _ctx_.period; }
 
-	static void tc_interrupt(uint32_t the_status)
-	{ _ctx_.tc_interrupt(the_status); }
+        uint32_t get_ticks()
+        { return _ctx_.ticks(_ctx_.period); }
 
-	using timer = tc_core<TIMER>;
+        constexpr uint32_t ticks(uint32_t period)
+        { return _ctx_.ticks(period); }
 
-      private:
+        static void tc_interrupt(uint32_t the_status)
+        { _ctx_.tc_interrupt(the_status); }
 
-	struct _action_ctx_
-	{
+        using timer = tc_core<TIMER>;
 
-	  _action_ctx_() { init(); }
+    private:
 
-	  void init() 
-	  { period=0; callback=[](void* dummy){}; user_ctx=nullptr; }
+      struct _action_ctx_
+      {
 
-	  void tc_interrupt(uint32_t the_status)
-	  {
-	    // RC compare interrupt
-	    if(
-		(the_status & TC_SR_CPCS) && 
-		timer::is_enabled_rc_interrupt()
-	      ) { callback(user_ctx); }
-	  }
+        _action_ctx_() { init(); }
 
-	  bool start(
-	    uint32_t the_period, 
-	    callback_t the_callback,
-	    void* user_ctx
-	  );
+        void init() 
+        { period=0; callback=[](void* dummy){}; user_ctx=nullptr; }
 
-	  void stop()
-	  {
-	    timer::disable_rc_interrupt();
+        void tc_interrupt(uint32_t the_status)
+        {
+          // RC compare interrupt
+          if(
+            (the_status & TC_SR_CPCS) && 
+            timer::is_enabled_rc_interrupt()
+          ) { callback(user_ctx); }
+        }
 
-	    timer::stop_interrupts();
-	    pmc_disable_periph_clk(uint32_t(timer::info::irq));
+        bool start(
+          uint32_t the_period, 
+          callback_t the_callback,
+          void* user_ctx
+        );
 
-	    init();
-	  }
+        void stop()
+        {
+          timer::disable_rc_interrupt();
 
-	  static constexpr uint32_t ticks_per_usec()
-	  {
-	    // NOTE: we will be using the fastest clock for TC ticks
-	    // just using a prescaler of 2
-	    return 
-	      static_cast<uint32_t>( ((VARIANT_MCK)>>1)/1000000 );
-	  }
+          timer::stop_interrupts();
+          pmc_disable_periph_clk(
+            static_cast<uint32_t>(timer::info::irq)
+          );
 
-	  static constexpr uint32_t max_period() // usecs.
-	  {
-	    return 
-	      static_cast<uint32_t>(static_cast<long long>(1<<32)-1) /
-	      ticks_per_usec();
-	  }
+          init();
+        }
 
-	  uint32_t period; // usecs.
-	  uint32_t rc; // timer ticks
+        static constexpr uint32_t ticks(
+          uint32_t period // hundreths of usecs (1e-8 secs.)
+        )
+        {
+          // NOTE: we will be using the fastest clock for TC ticks
+          // just using a prescaler of 2
+          return 
+            static_cast<uint32_t>(
+              static_cast<long long>(period)
+              * static_cast<long long>(VARIANT_MCK>>1)
+              / static_cast<long long>(100000000)  
+            );
+        }
 
-	  callback_t callback;
-	  void* user_ctx;
-	};
+        static constexpr uint32_t ticks_per_usec()
+        { return ticks(100); }
 
-	static _action_ctx_ _ctx_;
+        static constexpr uint32_t max_period() // hundreths of usecs. 
+        {
+          return static_cast<uint32_t>(
+            static_cast<long long>(1<<32)-static_cast<long long>(1)
+          ); 
+        }
+
+        uint32_t period; // usecs.
+        uint32_t rc; // timer ticks
+
+        callback_t callback;
+        void* user_ctx;
+      };
+
+      static _action_ctx_ _ctx_;
     };
 
     template<timer_ids TIMER> 
@@ -555,7 +575,7 @@ namespace arduino_due
 
     template<timer_ids TIMER> 
     bool action<TIMER>::_action_ctx_::start(
-      uint32_t the_period,
+      uint32_t the_period, // hundreths of usecs. (1e-8 secs.)
       callback_t the_callback,
       void* the_user_ctx
     )
@@ -567,7 +587,7 @@ namespace arduino_due
       user_ctx=the_user_ctx;
 
       // period in timer ticks
-      rc=period*ticks_per_usec();
+      rc=ticks(period);
 
       // PMC settings
       pmc_set_writeprotect(0);
@@ -579,7 +599,7 @@ namespace arduino_due
         timer::info::channel,
         TC_CMR_TCCLKS_TIMER_CLOCK1 | // clock prescaler set to /2
         TC_CMR_CPCTRG | // timer reset on RC match
-	TC_CMR_ETRGEDG_NONE // no external trigger 
+        TC_CMR_ETRGEDG_NONE // no external trigger 
       );
       
       // seting RC to the given period 

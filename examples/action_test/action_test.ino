@@ -36,7 +36,7 @@
 
 using namespace arduino_due;
 
-#define CALLBACK_PERIOD 100000 // usecs.
+#define CALLBACK_PERIOD 10000000 // hundreths of usecs. (1e-8 secs.)
 #define DELAY_TIME 2000 // msecs.
 
 // action_tc0 declaration
@@ -79,7 +79,9 @@ void setup() {
   Serial.println(" usecs.");
   Serial.print("period: "); 
   Serial.print(action_tc0.get_period());
-  Serial.println(" usecs.");
+  Serial.println(" hundreths of usecs. (1e-8 secs.)");
+  Serial.print("ticks: "); 
+  Serial.println(action_tc0.ticks(CALLBACK_PERIOD));
 
   Serial.println("========================================================");
 }

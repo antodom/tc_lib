@@ -56,6 +56,7 @@ set(
   capture_test
   pwm_capture_test
   action_test
+  wave_example
 )
 
 foreach(src_example ${TC_EXAMPLES})

@@ -44,7 +44,7 @@ Capture objects take advantage of TC module channels in *capture* mode to measur
 
 In addition, capture objects can tell you how many pulses they have captured so far using member function *get_duty_period_and_pulses()*.
 
-### 2.1 Fast signals and capture objects
+### 2.1. Fast signals and capture objects
 
 When capturing signals capture objects do intensive use of interrupts associated to the TC channel associated with the specific object. If the signal to capture is very fast (pulse duration around 1 microsecond or less), some interrupts will be missed to track the signal. Internally the TC channel in capture mode registers those situations with the signaling of a "load overrun" of one of the capture registers RA or RB (more details in ATSAM3X8E data sheet). Evidently, this may also happen in an application where the use of interrupts is very high, even if the signal to capture is not so fast. In any case, specially with fast signals (frequencies of around 1 Mhz) this massive use of interrupts could provoke the freezing of the CPU, since all CPU time was invested on interrupts. To avoid that situation, the capture object stops capturing when it detects too much overrun events, keeping internally the duty and period of the last pulse captured. Function *get_duty_and_period()* returns a status value where we can check if the capture objects was overrun and/or stopped. Here a snippet of code from example *pwm_capture_test.ino* illustrating its use:
 
@@ -82,7 +82,7 @@ Action objects are associated with a specific TC channel, whether TC0, TC1, TC2,
 action_tc0_declaration();
 ```
 
-To start using an action object we have to call action object's *start()* member function to establish the callback and the period (in microseconds) to call the callback. Here a fragment of code illustrating its use in example *action_test.ino*:
+To start using an action object we have to call action object's *start()* member function to establish the callback and the period (in hundredths of microseconds) to call the callback. Here a fragment of code illustrating its use in example *action_test.ino*:
 
 ```
 action_tc0.start(CALLBACK_PERIOD,set_led_action,&action_ctx);
@@ -110,11 +110,13 @@ In addition you must add the flag -std=gnu++11 for compiling. For doing that add
 
 ### 5. Examples
 
-On the examples directory you have available a basic example for using a capture object, *capture_test.ino*, and an example for using an action object, *action_test.ino*. 
+On the examples directory you have available a basic example for using a capture object, *capture_test.ino*, and two examples for using action objects, *action_test.ino* and *wave_example.ino*. 
 
 There is third example, *pwm_capture_test.ino* which is specifically designed to check the capture objects with fast signals. For this example it is necessary the use of library pwm_lib, available at [https://github.com/antodom/pwm_lib](https://github.com/antodom/pwm_lib).
 
-I hope all three examples are self-explaining.
+The last example, *wave_example.ino*, shows how to use action objects to send a byte through a pin using a digital wave.
+
+I hope all four examples are self-explaining.
 
 ### 6. Incompatibilities
 
@@ -126,6 +128,7 @@ For compiling on command line using CMake, just proceed in the following manner:
 
 1. Set the following environment variables (a good place to put them is on .bashrc):
   * Set `ARDUINO_DUE_ROOT_PATH` to `~/.arduino15/packages/arduino/`.
+  * Set 'ARDUINO_DUE_VERSION' to `1.6.17`.
   * Set `ARDUINO_UNO_ROOT_PATH` to the path where you have installed the Arduino IDE, for example, `~/installations/arduino-1.6.5`.
   * Set `ARDUINO_IDE_LIBRARY_PATH` to the path for the Arduino IDE projects you have in preferences. For example, `~/arduino_projects`.
 
