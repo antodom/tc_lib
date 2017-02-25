@@ -124,7 +124,7 @@ For compiling on command line using CMake, just proceed in the following manner:
 
 1. Set the following environment variables (a good place to put them is on .bashrc):
   * Set `ARDUINO_DUE_ROOT_PATH` to `~/.arduino15/packages/arduino/`.
-  * Set 'ARDUINO_DUE_VERSION' to `1.6.17`.
+  * Set `ARDUINO_DUE_VERSION` to `1.6.17`.
   * Set `ARDUINO_UNO_ROOT_PATH` to the path where you have installed the Arduino IDE, for example, `~/installations/arduino-1.6.5`.
   * Set `ARDUINO_IDE_LIBRARY_PATH` to the path for the Arduino IDE projects you have in preferences. For example, `~/arduino_projects`.
 
@@ -139,8 +139,8 @@ For compiling on command line using CMake, just proceed in the following manner:
 8. The previous step has generated the examples available with the library. You can upload the code executing:
   * `make upload_capture_test`, 
   * `make upload_action_test`, 
-  * `make pwm_capture_test`, 
-  * `make wave_example`, 
+  * `make upload_pwm_capture_test`, 
+  * `make upload_wave_example`, 
 
 ### 8. Library users
 
