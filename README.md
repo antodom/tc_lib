@@ -110,11 +110,7 @@ In addition you must add the flag -std=gnu++11 for compiling. For doing that add
 
 ### 5. Examples
 
-On the examples directory you have available a basic example for using a capture object, *capture_test.ino*, and two examples for using action objects, *action_test.ino* and *wave_example.ino*. 
-
-There is third example, *pwm_capture_test.ino* which is specifically designed to check the capture objects with fast signals. For this example it is necessary the use of library pwm_lib, available at [https://github.com/antodom/pwm_lib](https://github.com/antodom/pwm_lib).
-
-The last example, *wave_example.ino*, shows how to use action objects to send a byte through a pin using a digital wave.
+On the examples directory you have available a basic example for using a capture object, *capture_test.ino*, and baseci example for using action objects, *action_test.ino*. Example *wave_example.ino* shows how to use action objects to send a byte through a pin using a digital wave. And finally a fourth example, *pwm_capture_test.ino* which is specifically designed to check the capture objects with fast signals. For this example it is necessary the use of library pwm_lib, available at [https://github.com/antodom/pwm_lib](https://github.com/antodom/pwm_lib).
 
 I hope all four examples are self-explaining.
 
@@ -143,6 +139,8 @@ For compiling on command line using CMake, just proceed in the following manner:
 8. The previous step has generated the examples available with the library. You can upload the code executing:
   * `make upload_capture_test`, 
   * `make upload_action_test`, 
+  * `make pwm_capture_test`, 
+  * `make wave_example`, 
 
 ### 8. Library users
 
