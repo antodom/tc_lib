@@ -57,7 +57,7 @@ namespace arduino_due
     template<timer_ids TIMER> struct tc_info {};
 
     #define tc_info_specialization(timer_id,tc_x,channel_x) \
-    template<> struct tc_info< \ 
+    template<> struct tc_info< \
       timer_ids::TIMER_TC##timer_id \
     > \
     { \

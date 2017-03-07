@@ -240,7 +240,7 @@ namespace arduino_due
 	  {
 	    return 
 	      static_cast<uint32_t>(
-          static_cast<long long>(1<<32)-static_cast<long long>(1)
+          (static_cast<long long>(1)<<32)-static_cast<long long>(1)
         ) / ticks_per_usec();
 	  }
 
@@ -556,7 +556,7 @@ namespace arduino_due
         static constexpr uint32_t max_period() // hundreths of usecs. 
         {
           return static_cast<uint32_t>(
-            static_cast<long long>(1<<32)-static_cast<long long>(1)
+            (static_cast<long long>(1)<<32)-static_cast<long long>(1)
           ); 
         }
 
