@@ -143,7 +143,7 @@ namespace arduino_due
 	bool config(
 	  uint32_t the_capture_window,
 	  uint32_t the_overruns = DEFAULT_MAX_OVERRUNS
-	) { _ctx_.config(the_capture_window,the_overruns); }
+	) { return _ctx_.config(the_capture_window,the_overruns); }
 
 	constexpr uint32_t ticks_per_usec() { return _ctx_.ticks_per_usec(); }
 	constexpr uint32_t max_capture_window() { return _ctx_.max_capture_window(); }
