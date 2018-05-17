@@ -116,7 +116,7 @@ I hope all four examples are self-explaining.
 
 ### 6. Incompatibilities
 
-Any library using the interrupts associated with any of the timer/counter module channels TC0, TC1, TC2, TC3, TC4, TC5, TC6, TC7 and TC8, has a potential compatibility problem with tc_lib, if it happens to use the same TC module and the same channel. An example of this potential incompatibility is library Servo which uses by default TC0, TC2, TC3, TC4 y TC5 interrupt handlers. In this case, you will be limited to use the capture and/or action objects associated with TC channels TC1, TC6, TC7 and TC8, to preserve the compatibility.
+Any library using the interrupts associated with any of the timer/counter module channels TC0, TC1, TC2, TC3, TC4, TC5, TC6, TC7 and TC8, has a potential compatibility problem with tc_lib, if it happens to use the same TC module and the same channel. An example of this potential incompatibility is library Servo which uses by default TC0, TC2, TC3, TC4 and TC5 interrupt handlers. In this case, you will be limited to use the capture and/or action objects associated with TC channels TC1, TC6, TC7 and TC8, to preserve the compatibility.
 
 ### 7. Compiling with CMake
 
