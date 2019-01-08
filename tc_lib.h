@@ -120,262 +120,289 @@ namespace arduino_due
     {
       public:
 
-	static constexpr const uint32_t DEFAULT_MAX_OVERRUNS=100;
+        static constexpr const uint32_t DEFAULT_MAX_OVERRUNS=100;
 
-	capture() {}
+        capture() {}
 
-	~capture() {}
+        ~capture() {}
 
         capture(const capture&) = delete;
-	capture(capture&&) = delete;
-	capture& operator=(const capture&) = delete;
-	capture& operator=(capture&&) = delete;
+        capture(capture&&) = delete;
+        capture& operator=(const capture&) = delete;
+        capture& operator=(capture&&) = delete;
 
-	static void tc_interrupt(uint32_t the_status)
-	{ _ctx_.tc_interrupt(the_status); }
+        static void tc_interrupt(uint32_t the_status)
+        { _ctx_.tc_interrupt(the_status); }
 
-	// NOTE: the_capture_window parameter in config() refers to
-	// the time window for measuring the duty of a PWM signal. As
-	// a rule of thumb if the PWM signal you want to measure has
-	// a period T, the capture window should be at least twice this
-	// time, that is, 2T. Parameter the_overruns specify how many
-	// loading overruns are tolerated before ceasing capturing.
-	bool config(
-	  uint32_t the_capture_window,
-	  uint32_t the_overruns = DEFAULT_MAX_OVERRUNS
-	) { return _ctx_.config(the_capture_window,the_overruns); }
+        // NOTE: the_capture_window parameter in config() refers to
+        // the time window for measuring the duty of a PWM signal. As
+        // a rule of thumb if the PWM signal you want to measure has
+        // a period T, the capture window should be at least twice this
+        // time, that is, 2T. Parameter the_overruns specify how many
+        // loading overruns are tolerated before ceasing capturing.
+        bool config(
+          uint32_t the_capture_window,
+          uint32_t the_overruns = DEFAULT_MAX_OVERRUNS
+        ) { return _ctx_.config(the_capture_window,the_overruns); }
 
-	constexpr uint32_t ticks_per_usec() { return _ctx_.ticks_per_usec(); }
-	constexpr uint32_t max_capture_window() { return _ctx_.max_capture_window(); }
+        constexpr uint32_t ticks_per_usec() { return _ctx_.ticks_per_usec(); }
+        constexpr uint32_t max_capture_window() { return _ctx_.max_capture_window(); }
 
-	// NOTE: member function get_duty_and_period() returns 
-	// the status of the capture object. Returns in arguments 
-	// the last valid measured and period. 
-	uint32_t get_duty_and_period(
-	  uint32_t& the_duty, 
-	  uint32_t& the_period
-	) 
-	{ return _ctx_.get_duty_and_period(the_duty,the_period); }
+        // NOTE: member function get_duty_and_period() returns 
+        // the status of the capture object. Returns in arguments 
+        // the last valid measured and period. By default, the 
+        // capture object get restarted when stopped, setting 
+        // do_restart to false avoid restarting
+        uint32_t get_duty_and_period(
+          uint32_t& the_duty, 
+          uint32_t& the_period,
+          bool do_restart = true
+        ) 
+        { return _ctx_.get_duty_and_period(
+            the_duty,
+            the_period,
+            do_restart); 
+        }
 
-	// NOTE: member function get_duty_and_period() returns 
-	// the status of the capture object. Returns in arguments 
-	// the last valid measured and period, and the count of 
-	// pulses accumulated since the last config. 
-	uint32_t get_duty_period_and_pulses(
-	  uint32_t& the_duty, 
-	  uint32_t& the_period,
-	  uint32_t& the_pulses
-	) 
-	{ 
-	  return _ctx_.get_duty_period_and_pulses(
-	    the_duty,
-	    the_period,
-	    the_pulses
-	  ); 
-	}
+        // NOTE: member function get_duty_and_period() returns 
+        // the status of the capture object. Returns in arguments 
+        // the last valid measured and period, and the count of 
+        // pulses accumulated since the last config. By default, the 
+        // capture object get restarted when stopped, setting 
+        // do_restart to false avoid restarting
+ 
+        uint32_t get_duty_period_and_pulses(
+          uint32_t& the_duty, 
+          uint32_t& the_period,
+          uint32_t& the_pulses,
+          bool do_restart = true
+        ) 
+        { 
+          return _ctx_.get_duty_period_and_pulses(
+            the_duty,
+            the_period,
+            the_pulses,
+            do_restart
+          ); 
+        }
 
-	uint32_t get_capture_window() { return _ctx_.capture_window; }
+        uint32_t get_capture_window() { return _ctx_.capture_window; }
 
-	bool is_overrun(uint32_t the_status) 
-	{ return _ctx_.is_overrun(the_status); }
+        bool is_overrun() { return _ctx_.is_overrun(); }
 
-	// NOTE: when too much loading overruns have been detected
-	// the capture stops measuring to avoid the use of compu-
-	// tational resources. Take into account that if the sig-
-	// nal measured has a frequency around 1 Mhz or higher the
-	// interrupts due to the capture object will consume all
-	// CPU time. If this is the case, the capture object stops
-	// capturing when the overun threshold is surpassed.
-	bool is_stopped(uint32_t the_status) 
-	{ return _ctx_.is_stopped(the_status); }
+        bool is_overrun(uint32_t the_status) 
+        { return _ctx_.is_overrun(the_status); }
 
-	// NOTE:capture object is unset when not configured
-	bool is_unset(uint32_t the_status) 
-	{ return _ctx_.is_unset(the_status); }
+        // NOTE: when too much loading overruns have been detected
+        // the capture stops measuring to avoid the use of compu-
+        // tational resources. Take into account that if the sig-
+        // nal measured has a frequency around 1 Mhz or higher the
+        // interrupts due to the capture object will consume all
+        // CPU time. If this is the case, the capture object stops
+        // capturing when the overun threshold is surpassed.
+        bool is_stopped() { return _ctx_.is_stopped(); }
 
-	void stop() { _ctx_.stop(); }
-	void restart() { _ctx_.restart(); }
+        bool is_stopped(uint32_t the_status) 
+        { return _ctx_.is_stopped(the_status); }
 
-	void lock() 
-	{ 
-	  if( is_unset() || is_stopped() ) return; 
-	  timer::disable_interrupts(); 
-	}
+        // NOTE:capture object is unset when not configured
+        bool is_unset() { return _ctx_.is_unset(); }
 
-	void unlock() 
-	{ 
-	  if( is_unset() || is_stopped() ) return; 
-	  timer::enable_interrupts(); 
-	}
+        bool is_unset(uint32_t the_status) 
+        { return _ctx_.is_unset(the_status); }
+
+        void stop() { _ctx_.stop(); }
+        void restart() { _ctx_.restart(); }
+
+        void lock() 
+        { 
+          if( is_unset() || is_stopped() ) return; 
+          timer::disable_interrupts(); 
+        }
+
+        void unlock() 
+        { 
+          if( is_unset() || is_stopped() ) return; 
+          timer::enable_interrupts(); 
+        }
 
       private:
 
-	using timer = tc_core<TIMER>;
+        using timer = tc_core<TIMER>;
 
         struct _capture_ctx_
-	{
-	  enum status_codes: uint32_t
-	  {
-	    UNSET=0,
-	    SET=1,
-	    OVERRUN=2,
-	    STOPPED=4
-	  };
-	  
-	  _capture_ctx_() {}
+        {
+          enum status_codes: uint32_t
+          {
+            UNSET=0,
+            SET=1,
+            OVERRUN=2,
+            STOPPED=4
+          };
+          
+          _capture_ctx_() {}
 
-	  bool config(uint32_t the_capture_window, uint32_t the_overruns);
+          bool config(uint32_t the_capture_window, uint32_t the_overruns);
 
-	  void tc_interrupt(uint32_t the_status);
+          void tc_interrupt(uint32_t the_status);
 
-	  static constexpr uint32_t ticks_per_usec()
-	  {
-	    // NOTE: we will be using the fastest clock for TC ticks
-	    // just using a prescaler of 2
-	    return 
-	      static_cast<uint32_t>( ((VARIANT_MCK)>>1)/1000000 );
-	  }
+          static constexpr uint32_t ticks_per_usec()
+          {
+            // NOTE: we will be using the fastest clock for TC ticks
+            // just using a prescaler of 2
+            return 
+              static_cast<uint32_t>( ((VARIANT_MCK)>>1)/1000000 );
+          }
 
-	  static constexpr uint32_t max_capture_window()
-	  {
-	    return 
-	      static_cast<uint32_t>(
-          (static_cast<long long>(1)<<32)-static_cast<long long>(1)
-        ) / ticks_per_usec();
-	  }
+          static constexpr uint32_t max_capture_window()
+          {
+            return 
+              static_cast<uint32_t>(
+                (static_cast<long long>(1)<<32)-static_cast<long long>(1)
+              ) / ticks_per_usec();
+          }
 
-	  uint32_t get_duty_and_period(
-	    uint32_t& the_duty, 
-	    uint32_t& the_period
-	  )
-	  {
-	    uint32_t the_status=status;
-	    if(is_unset(the_status)) return the_status;
+          uint32_t get_duty_and_period(
+            uint32_t& the_duty, 
+            uint32_t& the_period,
+            bool do_restart 
+          )
+          {
+            uint32_t the_status=status;
+            if(is_unset(the_status)) return the_status;
 
-	    timer::disable_interrupts(); 
-	    the_duty=duty; the_period=period;
-	    the_status=status; 
-	    status=status&(~status_codes::OVERRUN);
-	    timer::enable_interrupts();
+            timer::disable_interrupts(); 
+            the_duty=duty; the_period=period;
+            the_status=status; 
+            status=status&(~status_codes::OVERRUN);
+            timer::enable_interrupts();
 
-	    if(is_stopped(the_status)) restart();
+            if(is_stopped(the_status) && do_restart) restart();
 
-	    return the_status; 
-	  }
+            return the_status; 
+          }
 
-	  uint32_t get_duty_period_and_pulses(
-	    uint32_t& the_duty, 
-	    uint32_t& the_period,
-	    uint32_t& the_pulses
-	  )
-	  {
-	    uint32_t the_status=status;
-	    if(is_unset(the_status)) return the_status;
+          uint32_t get_duty_period_and_pulses(
+            uint32_t& the_duty, 
+            uint32_t& the_period,
+            uint32_t& the_pulses,
+            bool do_restart
+          )
+          {
+            uint32_t the_status=status;
+            if(is_unset(the_status)) return the_status;
 
-	    timer::disable_interrupts(); 
-	    the_duty=duty; the_period=period; the_pulses=pulses;
-	    the_status=status; 
-	    status=status&(~status_codes::OVERRUN);
-	    timer::enable_interrupts();
+            timer::disable_interrupts(); 
+            the_duty=duty; the_period=period; the_pulses=pulses;
+            the_status=status; 
+            status=status&(~status_codes::OVERRUN);
+            timer::enable_interrupts();
 
-	    if(is_stopped(the_status)) restart();
+            if(is_stopped(the_status) && do_restart) restart();
 
-	    return the_status; 
-	  }
+            return the_status; 
+          }
 
-	  bool is_overrun(uint32_t the_status) 
-	  { return (the_status&status_codes::OVERRUN); }
+          bool is_overrun() 
+          { return (status&status_codes::OVERRUN); }
 
-	  bool is_stopped(uint32_t the_status) 
-	  { return (the_status&status_codes::STOPPED); }
+          bool is_overrun(uint32_t the_status) 
+          { return (the_status&status_codes::OVERRUN); }
 
-	  bool is_unset(uint32_t the_status) 
-	  { return !the_status; }
+          bool is_stopped() 
+          { return (status&status_codes::STOPPED); }
 
-	  void stop() 
-	  { 
-	    uint32_t the_status=status;
-	    if(
-	      is_unset(the_status) ||
-	      is_stopped(the_status)
-	    ) return;
+          bool is_stopped(uint32_t the_status) 
+          { return (the_status&status_codes::STOPPED); }
 
-	    timer::stop_interrupts(); 
-	    status=status|status_codes::STOPPED; 
-	  }
+          bool is_unset() { return !status; }
 
-	  void restart() 
-	  {
-	    uint32_t the_status=status;
-	    if(
-	      is_unset(the_status) ||
-	      !is_stopped(the_status)
-	    ) return;
+          bool is_unset(uint32_t the_status) { return !the_status; }
 
-	    ra=duty=period=overruns=0;
-	    status&=
-	      ~(status_codes::OVERRUN|status_codes::STOPPED);
+          void stop() 
+          { 
+            uint32_t the_status=status;
+            if(
+              is_unset(the_status) ||
+              is_stopped(the_status)
+            ) return;
 
-	    // clearing pending interrupt flags
-	    uint32_t dummy=TC_GetStatus( 
-	      timer::info::tc_p,
-	      timer::info::channel
-	    );
-	    timer::start_interrupts();
-	  }
-	  
-	  void end()
-	  {
-	    uint32_t the_status=status;
-	    if(is_unset(the_status)) return;
+            timer::stop_interrupts(); 
+            status=status|status_codes::STOPPED; 
+          }
 
-	    timer::stop_interrupts();
-	    timer::disable_lovr_interrupt();
-	    timer::disable_ldra_interrupt();
-	    timer::disable_ldrb_interrupt();
-	    timer::disable_rc_interrupt();
-	    pmc_disable_periph_clk(uint32_t(timer::info::irq));
+          void restart() 
+          {
+            uint32_t the_status=status;
+            if(
+              is_unset(the_status) ||
+              !is_stopped(the_status)
+            ) return;
 
-	    status=status_codes::UNSET;
-	  }
+            ra=duty=period=overruns=0;
+            status&=
+              ~(status_codes::OVERRUN|status_codes::STOPPED);
 
-	  void load_overrun()
-	  {
-	    status=status|status_codes::OVERRUN;
-	    if((++overruns)>max_overruns)
-	    { 
-	      timer::stop_interrupts(); 
-	      status=status|status_codes::STOPPED;
-	    }
-	  }
+            // clearing pending interrupt flags
+            uint32_t dummy=TC_GetStatus( 
+              timer::info::tc_p,
+              timer::info::channel
+            );
+            timer::start_interrupts();
+          }
+          
+          void end()
+          {
+            uint32_t the_status=status;
+            if(is_unset(the_status)) return;
 
-	  void ra_loaded()
-	  {
-	    ra=timer::info::tc_p->TC_CHANNEL[timer::info::channel].TC_RA; 
-	  }
+            timer::stop_interrupts();
+            timer::disable_lovr_interrupt();
+            timer::disable_ldra_interrupt();
+            timer::disable_ldrb_interrupt();
+            timer::disable_rc_interrupt();
+            pmc_disable_periph_clk(uint32_t(timer::info::irq));
 
-	  void rb_loaded()
-	  {
-	    period=timer::info::tc_p->TC_CHANNEL[timer::info::channel].TC_RB;
-	    duty=period-ra; pulses++;
-	  }
+            status=status_codes::UNSET;
+          }
 
-	  void rc_matched() { ra=duty=period=0; }
-	  	  
-	  // capture values
-	  volatile uint32_t ra;
-	  volatile uint32_t duty;
-	  volatile uint32_t period;
-	  volatile uint32_t pulses;
-	  volatile uint32_t overruns;
-	  volatile uint32_t status;
-	  
-	  uint32_t rc;
-	  uint32_t capture_window;
-	  uint32_t max_overruns;
-	};
+          void load_overrun()
+          {
+            status=status|status_codes::OVERRUN;
+            if((++overruns)>max_overruns)
+            { 
+              timer::stop_interrupts(); 
+              status=status|status_codes::STOPPED;
+            }
+          }
 
-	static _capture_ctx_ _ctx_;
+          void ra_loaded()
+          {
+            ra=timer::info::tc_p->TC_CHANNEL[timer::info::channel].TC_RA; 
+          }
+
+          void rb_loaded()
+          {
+            period=timer::info::tc_p->TC_CHANNEL[timer::info::channel].TC_RB;
+            duty=period-ra; pulses++;
+          }
+
+          void rc_matched() { ra=duty=period=0; }
+              
+          // capture values
+          volatile uint32_t ra;
+          volatile uint32_t duty;
+          volatile uint32_t period;
+          volatile uint32_t pulses;
+          volatile uint32_t overruns;
+          volatile uint32_t status;
+          
+          uint32_t rc;
+          uint32_t capture_window;
+          uint32_t max_overruns;
+        };
+
+        static _capture_ctx_ _ctx_;
     };
 
     template<timer_ids TIMER> 
