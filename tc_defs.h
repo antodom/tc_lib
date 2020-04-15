@@ -61,7 +61,7 @@ namespace arduino_due
       timer_ids::TIMER_TC##timer_id \
     > \
     { \
-      static constexpr Tc* tc_p = tc_x; \
+      static Tc* tc_p() { return tc_x; } \
       static constexpr const uint32_t channel = channel_x; \
       static constexpr const IRQn_Type irq = TC##timer_id##_IRQn; \
     };
@@ -86,13 +86,13 @@ namespace arduino_due
       {
         NVIC_ClearPendingIRQ(info::irq);
         NVIC_EnableIRQ(info::irq);
-        TC_Start(info::tc_p,info::channel);
+        TC_Start(info::tc_p(),info::channel);
       }
 
       static void stop_interrupts()
       {
         NVIC_DisableIRQ(info::irq);
-        TC_Stop(info::tc_p,info::channel);
+        TC_Stop(info::tc_p(),info::channel);
       }
 
       static void config_interrupt() { NVIC_SetPriority(info::irq,0); }
@@ -101,81 +101,81 @@ namespace arduino_due
 
       static void enable_lovr_interrupt()
       {
-        info::tc_p->TC_CHANNEL[info::channel].TC_IER=
+        info::tc_p()->TC_CHANNEL[info::channel].TC_IER=
           TC_IER_LOVRS;
       }
       
       static bool is_enabled_lovr_interrupt()
       {
         return (
-          info::tc_p->TC_CHANNEL[info::channel].TC_IMR &
+          info::tc_p()->TC_CHANNEL[info::channel].TC_IMR &
           TC_IMR_LOVRS
         );
       }
       
       static void disable_lovr_interrupt()
       {
-        info::tc_p->TC_CHANNEL[info::channel].TC_IDR=
+        info::tc_p()->TC_CHANNEL[info::channel].TC_IDR=
           TC_IDR_LOVRS;
       }
 
       static void enable_ldra_interrupt()
       {
-        info::tc_p->TC_CHANNEL[info::channel].TC_IER=
+        info::tc_p()->TC_CHANNEL[info::channel].TC_IER=
           TC_IER_LDRAS;
       }
 
       static bool is_enabled_ldra_interrupt()
       {
         return (
-          info::tc_p->TC_CHANNEL[info::channel].TC_IMR &
+          info::tc_p()->TC_CHANNEL[info::channel].TC_IMR &
           TC_IMR_LDRAS
         );
       }
 
       static void disable_ldra_interrupt()
       {
-        info::tc_p->TC_CHANNEL[info::channel].TC_IDR=
+        info::tc_p()->TC_CHANNEL[info::channel].TC_IDR=
           TC_IDR_LDRAS;
       }
 
       static void enable_ldrb_interrupt()
       {
-        info::tc_p->TC_CHANNEL[info::channel].TC_IER=
+        info::tc_p()->TC_CHANNEL[info::channel].TC_IER=
           TC_IER_LDRBS;
       }
 
       static bool is_enabled_ldrb_interrupt()
       {
         return (
-          info::tc_p->TC_CHANNEL[info::channel].TC_IMR &
+          info::tc_p()->TC_CHANNEL[info::channel].TC_IMR &
           TC_IMR_LDRBS
         );
       }
 
       static void disable_ldrb_interrupt()
       {
-        info::tc_p->TC_CHANNEL[info::channel].TC_IDR=
+        info::tc_p()->TC_CHANNEL[info::channel].TC_IDR=
           TC_IDR_LDRBS;
       }
 
       static void enable_rc_interrupt()
       {
-        info::tc_p->TC_CHANNEL[info::channel].TC_IER=
+        info::tc_p()->TC_CHANNEL[info::channel].TC_IER=
           TC_IER_CPCS;
       }
 
       static bool is_enabled_rc_interrupt()
       {
         return (
-          info::tc_p->TC_CHANNEL[info::channel].TC_IMR &
+          info::tc_p()->TC_CHANNEL[info::channel].TC_IMR &
           TC_IMR_CPCS
         );
       }
 
       static void disable_rc_interrupt()
       {
-        info::tc_p->TC_CHANNEL[info::channel].TC_IDR=
+        info::tc_p()->TC_CHANNEL[info::channel].TC_IDR=
           TC_IDR_CPCS;
       }
     

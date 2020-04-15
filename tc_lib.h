@@ -47,7 +47,7 @@ void TC##id##_Handler(void) \
   uint32_t status=TC_GetStatus( \
     arduino_due::tc_lib::tc_info<\
       arduino_due::tc_lib::timer_ids::TIMER_TC##id \
-    >::tc_p, \
+    >::tc_p(), \
     arduino_due::tc_lib::tc_info<\
       arduino_due::tc_lib::timer_ids::TIMER_TC##id \
     >::channel \
@@ -80,7 +80,7 @@ void TC##id##_Handler(void) \
   uint32_t status=TC_GetStatus( \
     arduino_due::tc_lib::tc_info<\
       arduino_due::tc_lib::timer_ids::TIMER_TC##id \
-    >::tc_p, \
+    >::tc_p(), \
     arduino_due::tc_lib::tc_info<\
       arduino_due::tc_lib::timer_ids::TIMER_TC##id \
     >::channel \
@@ -345,7 +345,7 @@ namespace arduino_due
 
             // clearing pending interrupt flags
             uint32_t dummy=TC_GetStatus( 
-              timer::info::tc_p,
+              timer::info::tc_p(),
               timer::info::channel
             );
             timer::start_interrupts();
@@ -378,12 +378,12 @@ namespace arduino_due
 
           void ra_loaded()
           {
-            ra=timer::info::tc_p->TC_CHANNEL[timer::info::channel].TC_RA; 
+            ra=timer::info::tc_p()->TC_CHANNEL[timer::info::channel].TC_RA; 
           }
 
           void rb_loaded()
           {
-            period=timer::info::tc_p->TC_CHANNEL[timer::info::channel].TC_RB;
+            period=timer::info::tc_p()->TC_CHANNEL[timer::info::channel].TC_RB;
             duty=period-ra; pulses++;
           }
 
@@ -431,7 +431,7 @@ namespace arduino_due
   
       // timing setings in capture mode
       TC_Configure(
-        timer::info::tc_p,
+        timer::info::tc_p(),
         timer::info::channel,
         TC_CMR_TCCLKS_TIMER_CLOCK1 | // clock prescaler set to /2
         TC_CMR_CPCTRG | // timer reset on RC match
@@ -442,7 +442,7 @@ namespace arduino_due
       );
       
       // seting RC to the capture window 
-      TC_SetRC(timer::info::tc_p,timer::info::channel,rc);
+      TC_SetRC(timer::info::tc_p(),timer::info::channel,rc);
 
       timer::enable_lovr_interrupt();
       timer::enable_ldra_interrupt();
@@ -622,7 +622,7 @@ namespace arduino_due
   
       // timing setings in capture mode
       TC_Configure(
-        timer::info::tc_p,
+        timer::info::tc_p(),
         timer::info::channel,
         TC_CMR_TCCLKS_TIMER_CLOCK1 | // clock prescaler set to /2
         TC_CMR_CPCTRG | // timer reset on RC match
@@ -630,7 +630,7 @@ namespace arduino_due
       );
       
       // seting RC to the given period 
-      TC_SetRC(timer::info::tc_p,timer::info::channel,rc);
+      TC_SetRC(timer::info::tc_p(),timer::info::channel,rc);
 
       timer::enable_rc_interrupt();
       timer::config_interrupt();
