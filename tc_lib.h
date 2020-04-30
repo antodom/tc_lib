@@ -344,7 +344,8 @@ namespace arduino_due
               ~(status_codes::OVERRUN|status_codes::STOPPED);
 
             // clearing pending interrupt flags
-            uint32_t dummy=TC_GetStatus( 
+            //uint32_t dummy=TC_GetStatus( 
+            TC_GetStatus( 
               timer::info::tc_p(),
               timer::info::channel
             );
