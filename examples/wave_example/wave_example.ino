@@ -1,8 +1,8 @@
 /**
  ** tc_lib library
- ** Copyright (C) 2016
+ ** Copyright (C) 2016,2020
  **
- **   Antonio C. Domínguez Brito <adominguez@iusiani.ulpgc.es>
+ **   Antonio C. Domínguez Brito <antonio.dominguez@ulpgc.es>
  **     División de Robótica y Oceanografía Computacional <www.roc.siani.es>
  **     and Departamento de Informática y Sistemas <www.dis.ulpgc.es>
  **     Universidad de Las Palmas de Gran  Canaria (ULPGC) <www.ulpgc.es>
@@ -27,7 +27,7 @@
  * Description: This is an example illustrating the use of the tc_lib library's
  * action objects for generating a digital signal.  
  * Date: February 21st, 2017
- * Author: Antonio C. Dominguez-Brito <adominguez@iusiani.ulpgc.es>
+ * Author: Antonio C. Dominguez-Brito <antonio.dominguez@ulpgc.es>
  * ROC-SIANI - Universidad de Las Palmas de Gran Canaria - Spain
  */
 

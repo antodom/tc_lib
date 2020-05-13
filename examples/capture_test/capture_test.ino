@@ -1,8 +1,8 @@
 /**
  ** tc_lib library
- ** Copyright (C) 2016
+ ** Copyright (C) 2015,2020
  **
- **   Antonio C. Domínguez Brito <adominguez@iusiani.ulpgc.es>
+ **   Antonio C. Domínguez Brito <antonio.dominguez@ulpgc.es>
  **     División de Robótica y Oceanografía Computacional <www.roc.siani.es>
  **     and Departamento de Informática y Sistemas <www.dis.ulpgc.es>
  **     Universidad de Las Palmas de Gran  Canaria (ULPGC) <www.ulpgc.es>
@@ -28,7 +28,7 @@
  * capture objects. Concretely captures the PWM output from an analog pin esta-
  * blished with an analog write.
  * Date: November 25th, 2015
- * Author: Antonio C. Dominguez-Brito <adominguez@iusiani.ulpgc.es>
+ * Author: Antonio C. Dominguez-Brito <antonio.dominguez@ulpgc.es>
  * ROC-SIANI - Universidad de Las Palmas de Gran Canaria - Spain
  */
 
