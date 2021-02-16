@@ -174,7 +174,7 @@ For compiling on command line using CMake, just proceed in the following manner:
 
 ### 8. Version Changes
 
-### 8.2. v1.2
+### 8.1. v1.2
 
 In this version capture objects with period callbacks has been added.
 
