@@ -1,4 +1,4 @@
-## tc_lib v1.1
+## tc_lib v1.2
 
 This is tc_lib library for the Arduino DUE electronic prototyping platform. 
 
@@ -44,7 +44,36 @@ Capture objects take advantage of TC module channels in *capture* mode to measur
 
 In addition, capture objects can tell you how many pulses they have captured so far using member function *get_duty_period_and_pulses()*.
 
-### 2.1. Fast signals and capture objects
+### 2.1. Callbacks on periods
+
+It is possible to provide to capture objects a callback for being called each time is detected the input signal completes a period. In this case the capture object should be declared with this other declaration macro:
+
+```
+// capture_tc0 declaration_with_callback
+// IMPORTANT: Take into account that for TC0 (TC0 and channel 0) the TIOA0 is
+// PB25, which is pin 2 for Arduino DUE, so  the capture pin in  this example
+// is pin 2. For the correspondence between all TIOA inputs for the different 
+// TC modules, you should consult uC Atmel ATSAM3X8E datasheet in section "36. 
+// Timer Counter (TC)", and the Arduino pin mapping for the DUE.
+
+capture_tc0_declaration_with_callback();
+```
+
+Then for associating a callback we use the config() member function of capture objects:
+
+```
+// initialization of capture objects
+capture_pin2.config(
+  (PWM_PERIOD_PIN_35/100)<<1,
+    capture_tc0_t::DEFAULT_MAX_OVERRUNS,
+    period_callback // <--- provided callback
+                    // the callback prototype is void(*)()
+  );  
+```
+
+For more information have a look to example *pwm_capture_test_with_callback.ino*.
+
+### 2.2. Fast signals and capture objects
 
 When capturing signals capture objects do intensive use of interrupts associated to the TC channel associated with the specific object. If the signal to capture is very fast (pulse duration around 1 microsecond or less), some interrupts will be missed to track the signal. Internally the TC channel in capture mode registers those situations with the signaling of a "load overrun" of one of the capture registers RA or RB (more details in ATSAM3X8E data sheet). Evidently, this may also happen in an application where the use of interrupts is very high, even if the signal to capture is not so fast. In any case, specially with fast signals (frequencies of around 1 Mhz) this massive use of interrupts could provoke the freezing of the CPU, since all CPU time was invested on interrupts. To avoid that situation, the capture object stops capturing when it detects too much overrun events, keeping internally the duty and period of the last pulse captured. Function *get_duty_and_period()* returns a status value where we can check if the capture objects was overrun and/or stopped. Here a snippet of code from example *pwm_capture_test.ino* illustrating its use:
 
@@ -104,7 +133,7 @@ and also at our own mirror at:
 
 * <http://bizet.dis.ulpgc.es/antodom/tc_lib>
 
-For using it you just have to copy the library on the libraries folder used by your Arduino IDE, the folder should be named "tc_lib".
+For using tc_lib, you just have to copy the library on the libraries folder used by your Arduino IDE, the folder should be named "tc_lib".
 
 In addition you must add the flag -std=gnu++11 for compiling. For doing that add -std=gnu++11 to the platform.txt file, concretely to compiler.cpp.flags. In Arduino IDE 1.6.6 and greater versions this flag is already set.
 
@@ -140,9 +169,16 @@ For compiling on command line using CMake, just proceed in the following manner:
   * `make upload_capture_test`, 
   * `make upload_action_test`, 
   * `make upload_pwm_capture_test`, 
+  * `make upload_pwm_capture_test_with_callback`,
   * `make upload_wave_example`, 
 
-### 8. Library users
+### 8. Version Changes
+
+### 2.2. v1.2
+
+In this version capture objects with period callbacks has been added.
+
+### 9. Library users
 
 In this section we would like to enumerate users using the library in their own projects and developments. So please, if you are using the library, drop us an email indicating in what project or development you are using it.
 
@@ -150,6 +186,6 @@ The list of users/projects goes now:
 
 1. **Project:** Autonomous sailboat A-Tirma (<http://velerorobot.blogspot.com.es>). **User**: División de Robótica y Oceanografía Computacional (<http://www.roc.siani.es>). **Description**: The library was a specific development for this project. The sailboat onboard system is based on an Arduino DUE. 
 
-### 9. Feedback & Suggestions
+### 10. Feedback & Suggestions
 
 Please be free to send me any comment, doubt of use, or suggestion in relation to tc_lib.

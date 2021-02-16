@@ -74,6 +74,41 @@ capture_tc##id##_t capture_tc##id;
 #define capture_tc7_declaration() capture_tc_declaration(7)
 #define capture_tc8_declaration() capture_tc_declaration(8)
 
+#define capture_tc_declaration_with_callback(id) \
+void TC##id##_Handler(void) \
+{ \
+  uint32_t status=TC_GetStatus( \
+    arduino_due::tc_lib::tc_info<\
+      arduino_due::tc_lib::timer_ids::TIMER_TC##id \
+    >::tc_p(), \
+    arduino_due::tc_lib::tc_info<\
+      arduino_due::tc_lib::timer_ids::TIMER_TC##id \
+    >::channel \
+  ); \
+  \
+  arduino_due::tc_lib::capture< \
+    arduino_due::tc_lib::timer_ids::TIMER_TC##id, \
+    true \
+  >::tc_interrupt(status); \
+} \
+\
+typedef arduino_due::tc_lib::capture< \
+  arduino_due::tc_lib::timer_ids::TIMER_TC##id, \
+  true \
+> capture_tc##id##_t; \
+\
+capture_tc##id##_t capture_tc##id;
+
+#define capture_tc0_declaration_with_callback() capture_tc_declaration_with_callback(0)
+#define capture_tc1_declaration_with_callback() capture_tc_declaration_with_callback(1)
+#define capture_tc2_declaration_with_callback() capture_tc_declaration_with_callback(2)
+#define capture_tc3_declaration_with_callback() capture_tc_declaration_with_callback(3)
+#define capture_tc4_declaration_with_callback() capture_tc_declaration_with_callback(4)
+#define capture_tc5_declaration_with_callback() capture_tc_declaration_with_callback(5)
+#define capture_tc6_declaration_with_callback() capture_tc_declaration_with_callback(6)
+#define capture_tc7_declaration_with_callback() capture_tc_declaration_with_callback(7)
+#define capture_tc8_declaration_with_callback() capture_tc_declaration_with_callback(8)
+
 #define action_tc_declaration(id) \
 void TC##id##_Handler(void) \
 { \
@@ -113,9 +148,28 @@ namespace arduino_due
   namespace tc_lib 
   {
 
+    template<bool BOOL_VALUE>
+    struct bool_to_type { static constexpr bool value=BOOL_VALUE; };
+
     using callback_t=void(*)(void*);
 
-    template<timer_ids TIMER> 
+    using period_callback_t=void(*)();
+
+    template<bool BV>
+    struct period_callback_wrapper {
+      period_callback_wrapper(period_callback_t callback = NULL) {}
+    };
+      
+    template<>
+    struct period_callback_wrapper<true> 
+    { 
+      period_callback_wrapper(period_callback_t callback = NULL): cllbck{callback} {}
+      period_callback_t cllbck;
+
+      void operator()() { if(cllbck) cllbck(); } 
+    };
+
+    template<timer_ids TIMER, bool WITH_CALLBACK = false> 
     class capture 
     {
       public:
@@ -142,8 +196,9 @@ namespace arduino_due
         // loading overruns are tolerated before ceasing capturing.
         bool config(
           uint32_t the_capture_window,
-          uint32_t the_overruns = DEFAULT_MAX_OVERRUNS
-        ) { return _ctx_.config(the_capture_window,the_overruns); }
+          uint32_t the_overruns = DEFAULT_MAX_OVERRUNS,
+          period_callback_t period_callback = NULL
+        ) { return _ctx_.config(the_capture_window,the_overruns,period_callback); }
 
         constexpr uint32_t ticks_per_usec() { return _ctx_.ticks_per_usec(); }
         constexpr uint32_t max_capture_window() { return _ctx_.max_capture_window(); }
@@ -161,10 +216,11 @@ namespace arduino_due
         { return _ctx_.get_duty_and_period(
             the_duty,
             the_period,
-            do_restart); 
+            do_restart
+          ); 
         }
 
-        // NOTE: member function get_duty_and_period() returns 
+        // NOTE: member function get_duty_period_and_pulses() returns 
         // the status of the capture object. Returns in arguments 
         // the last valid measured and period, and the count of 
         // pulses accumulated since the last config. By default, the 
@@ -230,7 +286,7 @@ namespace arduino_due
 
         using timer = tc_core<TIMER>;
 
-        struct _capture_ctx_
+        struct _capture_ctx_: period_callback_wrapper<WITH_CALLBACK>
         {
           enum status_codes: uint32_t
           {
@@ -242,7 +298,43 @@ namespace arduino_due
           
           _capture_ctx_() {}
 
-          bool config(uint32_t the_capture_window, uint32_t the_overruns);
+          bool config(
+            uint32_t the_capture_window, 
+            uint32_t the_overruns, 
+            period_callback_t period_cllbck = NULL
+          )
+          {
+            return config_(
+              the_capture_window,
+              the_overruns,
+              period_cllbck,
+              bool_to_type<WITH_CALLBACK>()
+            );
+          }
+
+          bool config_(
+            uint32_t the_capture_window, 
+            uint32_t the_overruns, 
+            period_callback_t period_cllbck,
+            bool_to_type<false>
+          );
+
+          bool config_(
+            uint32_t the_capture_window, 
+            uint32_t the_overruns, 
+            period_callback_t period_cllbck,
+            bool_to_type<true>
+          )
+          { 
+            this->cllbck=period_cllbck;
+
+            return config_(
+              the_capture_window,
+              the_overruns,
+              period_cllbck,
+              bool_to_type<false>()
+            );
+          }
 
           void tc_interrupt(uint32_t the_status);
 
@@ -382,11 +474,21 @@ namespace arduino_due
             ra=timer::info::tc_p()->TC_CHANNEL[timer::info::channel].TC_RA; 
           }
 
-          void rb_loaded()
+          void rb_loaded_(bool_to_type<false>)
           {
             period=timer::info::tc_p()->TC_CHANNEL[timer::info::channel].TC_RB;
             duty=period-ra; pulses++;
           }
+
+          void rb_loaded_(bool_to_type<true>)
+          {
+            rb_loaded_(bool_to_type<false>());
+
+            //calling this->cllbck() through base class
+            (*this)();
+          }
+
+          void rb_loaded() { rb_loaded_(bool_to_type<WITH_CALLBACK>()); }
 
           void rc_matched() { ra=duty=period=0; }
               
@@ -406,17 +508,19 @@ namespace arduino_due
         static _capture_ctx_ _ctx_;
     };
 
-    template<timer_ids TIMER> 
-    typename capture<TIMER>::_capture_ctx_ capture<TIMER>::_ctx_;
+    template<timer_ids TIMER,bool WITH_CALLBACK> 
+    typename capture<TIMER,WITH_CALLBACK>::_capture_ctx_ capture<TIMER,WITH_CALLBACK>::_ctx_;
 
-    template<timer_ids TIMER>
-    bool capture<TIMER>::_capture_ctx_::config(
+    template<timer_ids TIMER,bool WITH_CALLBACK> 
+    bool capture<TIMER,WITH_CALLBACK>::_capture_ctx_::config_(
       uint32_t the_capture_window, // in microseconds
-      uint32_t the_overruns
+      uint32_t the_overruns, 
+      period_callback_t period_cllbck,
+      bool_to_type<false>
     )
     {
       if( (the_capture_window>max_capture_window()) || !the_overruns) 
-	return false;
+	      return false;
 
       capture_window=the_capture_window;
       ra=duty=period=pulses=overruns=0;
@@ -456,8 +560,8 @@ namespace arduino_due
       return true;
     }
 
-    template<timer_ids TIMER> 
-    void capture<TIMER>::_capture_ctx_::tc_interrupt(
+    template<timer_ids TIMER,bool WITH_CALLBACK> 
+    void capture<TIMER,WITH_CALLBACK>::_capture_ctx_::tc_interrupt(
       uint32_t the_status
     )
     {
