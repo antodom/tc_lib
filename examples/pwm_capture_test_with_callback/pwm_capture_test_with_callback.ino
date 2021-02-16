@@ -1,6 +1,6 @@
 /**
  ** tc_lib library
- ** Copyright (C) 2015,2020
+ ** Copyright (C) 2015,2021
  **
  **   Antonio C. Domínguez Brito <antonio.dominguez@ulpgc.es>
  **     División de Robótica y Oceanografía Computacional <www.roc.siani.es>
@@ -27,7 +27,7 @@
  * Description: This is an example to test how fast are the digital 
  * signals tc_lib is able to measure. For doing that it uses library
  * pwm_lib at https://github.com/antodom/pwm_lib.
- * Date: February 1st, 2015
+ * Date: February 15th, 2021
  * Author: Antonio C. Dominguez-Brito <antonio.dominguez@ulpgc.es>
  * ROC-SIANI - Universidad de Las Palmas de Gran Canaria - Spain
  */

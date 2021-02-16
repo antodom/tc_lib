@@ -1,6 +1,6 @@
 /**
  ** tc_lib library
- ** Copyright (C) 2015,2020
+ ** Copyright (C) 2015,2021
  **
  **   Antonio C. Domínguez Brito <antonio.dominguez@ulpgc.es>
  **     División de Robótica y Oceanografía Computacional <www.roc.siani.es>
