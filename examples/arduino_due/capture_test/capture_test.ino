@@ -34,7 +34,7 @@
 
 #include "tc_lib.h"
 
-using namespace arduino_due;
+using namespace tc_lib::arduino_due;
 
 #define CAPTURE_TIME_WINDOW 2500000 // usecs
 #define ANALOG_PIN 7

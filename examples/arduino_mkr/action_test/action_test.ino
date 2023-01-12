@@ -1,6 +1,6 @@
 /**
  ** tc_lib library
- ** Copyright (C) 2015,2021
+ ** Copyright (C) 2015,2023
  **
  **   Antonio C. Domínguez Brito <antonio.dominguez@ulpgc.es>
  **     División de Robótica y Oceanografía Computacional <www.roc.siani.es>
@@ -27,32 +27,34 @@
  * Description: This is an example illustrating the use of the tc_lib library's
  * action objects. Concretely action objects, which allow to call periodically
  * a function on a TC interrupt context.
- * Date: November 27th, 2015
+ * Date: January 11th, 2023
  * Author: Antonio C. Dominguez-Brito <antonio.dominguez@ulpgc.es>
  * ROC-SIANI - Universidad de Las Palmas de Gran Canaria - Spain
  */
 
+#define ARDUINO_MKR_PORT
+
 #include "tc_lib.h"
 
-using namespace arduino_due;
+using namespace tc_lib::arduino_mkr;
 
-#define CALLBACK_PERIOD 10000000 // hundreths of usecs. (1e-8 secs.)
-#define DELAY_TIME 2000 // msecs.
+#define CALLBACK_PERIOD 50000000 // hundreths of usecs. (1e-8 secs.)
+#define DELAY_TIME 1000 // msecs.
 
-// action_tc0 declaration
-action_tc0_declaration();
+// action_tc4 declaration
+action_tc4_declaration();
 
 struct ctx
 {
   ctx() { onoff=false; counter=0; }
 
   bool onoff;
-  uint32_t counter;
+  volatile uint32_t counter;
 };
 
 ctx action_ctx;
 
-// This is the action called periodically with action_tc0 object
+// This is the action called periodically with action_tc4 object
 // It blinks LED_BUILTIN on pin 13 and increments a counter
 void set_led_action(void* a_ctx)
 {
@@ -68,22 +70,31 @@ void setup() {
   // put your setup code here, to run once:
 
   Serial.begin(9600);
-  pinMode(LED_BUILTIN,OUTPUT);
-
-  action_tc0.start(CALLBACK_PERIOD,set_led_action,&action_ctx);
+  Serial.flush();
+  while (!Serial) { delay(10); }
 
   Serial.println("========================================================");
+  Serial.print("sizeof(TcCount8)="); Serial.println(sizeof(TcCount8));
+  Serial.print("sizeof(TcCount16)="); Serial.println(sizeof(TcCount16));
+  Serial.print("sizeof(TcCount32)="); Serial.println(sizeof(TcCount32));
 
+  action_tc4.start(CALLBACK_PERIOD,set_led_action,&action_ctx);
   Serial.print("max period: "); 
-  Serial.print(action_tc0.max_period());
+  Serial.print(action_tc4.max_period());
   Serial.println(" usecs.");
   Serial.print("period: "); 
-  Serial.print(action_tc0.get_period());
+  Serial.print(action_tc4.get_period());
   Serial.println(" hundreths of usecs. (1e-8 secs.)");
   Serial.print("ticks: "); 
-  Serial.println(action_tc0.ticks(CALLBACK_PERIOD));
+  Serial.println(action_tc4.ticks(CALLBACK_PERIOD));
+  Serial.print("prescaler: "); 
+  Serial.print(action_tc4.get_prescaler());
+  Serial.print(" -> max. period: ");
+  Serial.print(action_tc4_t::timer::max_period(action_tc4_t::timer::prescaler_exponents[action_tc4.get_prescaler()],VARIANT_MCK,16),12);
+  Serial.println(" s.");
 
   Serial.println("========================================================");
+  Serial.flush();
 }
 
 void loop() {
@@ -92,10 +103,11 @@ void loop() {
   Serial.println("********************************************************");
   Serial.print("[started] counter: "); Serial.println(action_ctx.counter);
   delay(DELAY_TIME); 
-  action_tc0.stop(); // stopping
+  action_tc4.stop(); // stopping
   Serial.print("[stopped] counter: "); Serial.println(action_ctx.counter);
   delay(DELAY_TIME); 
-  action_tc0.start(CALLBACK_PERIOD,set_led_action,&action_ctx);
+  action_tc4.start(CALLBACK_PERIOD,set_led_action,&action_ctx);
 }
+
 
 

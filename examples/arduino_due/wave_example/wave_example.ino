@@ -33,7 +33,7 @@
 
 #include "tc_lib.h"
 
-using namespace arduino_due;
+using namespace tc_lib::arduino_due;
 
 #define WAVE_PERIOD 120 //460 // 1200 //50000 // hundredths of usecs. (1e-8 msecs.)
 #define WAVE_PIN 10 

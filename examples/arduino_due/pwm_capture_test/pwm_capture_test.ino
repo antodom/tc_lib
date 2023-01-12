@@ -27,7 +27,7 @@
  * Description: This is an example to test how fast are the digital 
  * signals tc_lib is able to measure. For doing that it uses library
  * pwm_lib at https://github.com/antodom/pwm_lib.
- * Date: February 15th, 2021
+ * Date: February 1st, 2016
  * Author: Antonio C. Dominguez-Brito <antonio.dominguez@ulpgc.es>
  * ROC-SIANI - Universidad de Las Palmas de Gran Canaria - Spain
  */
@@ -35,13 +35,13 @@
 #include "tc_lib.h"
 #include "pwm_lib.h"
 
+using namespace tc_lib::arduino_due;
 using namespace arduino_due::pwm_lib;
-using namespace arduino_due::tc_lib;
 
-#define PWM_PERIOD_PIN_35 10000000 // hundredths of usecs (1e-8 secs)
-#define PWM_DUTY_PIN_35    5000000 // hundredths of usecs (1e-8 secs)
+#define PWM_PERIOD_PIN_35 500 // hundredths of usecs (1e-8 secs)
+#define PWM_DUTY_PIN_35 50 // hundredths of usecs (1e-8 secs)
 
-#define PSEUDO_PERIOD 1000 // msecs
+#define DUTY_KEEPING_TIME 1000 // msecs
 
 // defining pwm object using pin 35, pin PC3 mapped to pin 35 on the DUE
 // this object uses PWM channel 0
@@ -57,13 +57,8 @@ pwm<pwm_pin::PWMH0_PC3> pwm_pin35;
 // for the DUE.
 // All in all, to meausure the pwm output in this example you should connect 
 // the PWM output of pin 35 to capture_tc0 object pin 2.
-// We are using a capture object to which we can provide a callback which get
-// called each time a period is detected
-capture_tc0_declaration_with_callback(); // TC0 and channel 0
+capture_tc0_declaration(); // TC0 and channel 0
 auto& capture_pin2=capture_tc0;
-
-volatile uint32_t period_counter=0;
-void period_callback() { period_counter++; }
 
 void setup() {
   // put your setup code here, to run once:
@@ -71,29 +66,43 @@ void setup() {
   Serial.begin(9600);
 
   // initialization of capture objects
-  capture_pin2.config(
-    (PWM_PERIOD_PIN_35/100)<<1,
-    capture_tc0_t::DEFAULT_MAX_OVERRUNS,
-    period_callback // <--- provided callback
-                    // the callback prototype is void(*)()
-  );
+  capture_pin2.config((PWM_PERIOD_PIN_35/100)<<1);
 
   // starting PWM signals
   pwm_pin35.start(PWM_PERIOD_PIN_35,PWM_DUTY_PIN_35);
 }
 
+// FIX: function template change_duty is defined in
+// #define to avoid it to be considered a function
+// prototype when integrating all .ino files in one
+// whole .cpp file. Without this trick the compiler
+// complains about the definition of the template
+// function.
+#define change_duty_definition \
+  template<typename pwm_type> void change_duty( \
+        pwm_type& pwm_obj, \
+        uint32_t pwm_duty, \
+        uint32_t pwm_period \
+      ) \
+{ \
+    uint32_t duty=pwm_obj.get_duty()+pwm_duty; \
+    if(duty>pwm_period) duty=pwm_duty; \
+    pwm_obj.set_duty(duty); \
+}
+// FIX: here we instantiate the template definition
+// of change_duty
+change_duty_definition;
+
 void loop() {
   // put your main code here,to run repeatedly:
 
-  delay(PSEUDO_PERIOD);
+  delay(DUTY_KEEPING_TIME);
 
-  uint32_t status,duty,period,pulses;
+  uint32_t status,duty,period;
 
-  auto now=millis();
   Serial.println("=======================================================================");
-  Serial.print(now);
-  Serial.print(": [PIN 35 -> PIN 2] "); 
-  status=capture_pin2.get_duty_period_and_pulses(duty,period,pulses);
+  Serial.print("[PIN 35 -> PIN 2] "); 
+  status=capture_pin2.get_duty_and_period(duty,period);
   Serial.print("duty: "); 
   Serial.print(
     static_cast<double>(duty)/
@@ -110,10 +119,9 @@ void loop() {
   if(capture_pin2.is_overrun(status)) Serial.print("[overrun]");
   if(capture_pin2.is_stopped(status)) Serial.print("[stopped]");  
   Serial.println();   
-  Serial.print(now);
-  Serial.print(": [PIN 35 -> PIN 2] pulses: "); Serial.print(pulses);
-  Serial.print(" period counter: "); Serial.print(period_counter);
-  Serial.println();   
   Serial.println("=======================================================================");
+
+  // changing duty in pwm output pin 35 
+  change_duty(pwm_pin35,PWM_DUTY_PIN_35,PWM_PERIOD_PIN_35);
 }
 
