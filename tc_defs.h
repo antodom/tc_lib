@@ -39,7 +39,7 @@
 namespace tc_lib 
 {
 
-  #ifndef ARDUINO_MKR_PORT
+  #ifndef ARDUINO_ARCH_SAMD
 
     namespace arduino_due 
     {
@@ -185,7 +185,7 @@ namespace tc_lib
 
     }
 
-  #else // ARDUINO_MKR_PORT
+  #else // ARDUINO_ARCH_SAMD
 
     namespace arduino_mkr 
     {
@@ -315,7 +315,7 @@ namespace tc_lib
       constexpr uint32_t const tc_core<TIMER>::prescaler_exponents[];
     }
 
-  #endif // ARDUINO_MKR_PORT
+  #endif // ARDUINO_ARCH_SAMD
 }
 
 

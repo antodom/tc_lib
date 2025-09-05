@@ -1,6 +1,6 @@
 /**
  ** tc_lib library
- ** Copyright (C) 2015,2023
+ ** Copyright (C) 2015,2025
  **
  **   Antonio C. Domínguez Brito <antonio.dominguez@ulpgc.es>
  **     División de Robótica y Oceanografía Computacional <www.roc.siani.es>
@@ -32,17 +32,17 @@
  * ROC-SIANI - Universidad de Las Palmas de Gran Canaria - Spain
  */
 
-#define ARDUINO_MKR_PORT
-
 #include "tc_lib.h"
 
 using namespace tc_lib::arduino_mkr;
 
-#define CALLBACK_PERIOD 50000000 // hundreths of usecs. (1e-8 secs.)
-#define DELAY_TIME 1000 // msecs.
+#define CALLBACK_PERIOD 10000000 // hundreths of usecs. (1e-8 secs.)
+#define DELAY_TIME 2000 // msecs.
 
 // action_tc4 declaration
 action_tc4_declaration();
+
+action_tc4_t& the_action=action_tc4;
 
 struct ctx
 {
@@ -68,10 +68,11 @@ void set_led_action(void* a_ctx)
 
 void setup() {
   // put your setup code here, to run once:
+  pinMode(LED_BUILTIN,OUTPUT);
 
   Serial.begin(9600);
-  Serial.flush();
   while (!Serial) { delay(10); }
+  //delay(10000);
 
   Serial.println("========================================================");
   Serial.print("sizeof(TcCount8)="); Serial.println(sizeof(TcCount8));
@@ -80,7 +81,7 @@ void setup() {
 
   action_tc4.start(CALLBACK_PERIOD,set_led_action,&action_ctx);
   Serial.print("max period: "); 
-  Serial.print(action_tc4.max_period());
+  Serial.print(action_tc4.max_period()/100);
   Serial.println(" usecs.");
   Serial.print("period: "); 
   Serial.print(action_tc4.get_period());
@@ -95,6 +96,7 @@ void setup() {
 
   Serial.println("========================================================");
   Serial.flush();
+
 }
 
 void loop() {
